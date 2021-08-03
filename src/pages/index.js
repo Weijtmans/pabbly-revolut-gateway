@@ -83,7 +83,7 @@ class Home extends Component {
             MySwal.fire({
               title: "Payment cancelled",
               icon: 'warning',
-              text: 'It seems like the payment was canceled.',
+              text: 'It seems like the transaction was canceled.',
               confirmButtonText: `Retry`,
               showCancelButton: true,
               customClass: {
