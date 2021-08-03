@@ -1,0 +1,18 @@
+{
+    "status": "success",
+    "message": "Customer data",
+    "data": {
+        "billing_address": {
+            "state": "Friesland",
+            "state_code": "FR",
+            "country": "NL"
+        },
+        "shipping_address": {},
+        "createdAt": "2021-08-03T20:25:55.348Z",
+        "updatedAt": "2021-08-03T20:25:55.348Z",
+        "id": "6109a653d2ce1a7092b56965",
+        "first_name": "Elgar",
+        "last_name": "Weijtmans",
+        "email_id": "eweijtmans@gmail.com"
+    }
+}
