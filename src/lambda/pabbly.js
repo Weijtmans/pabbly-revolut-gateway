@@ -1,7 +1,7 @@
 import Axios from "axios"
 
-// Generic Pabbly API call function
-const callApi = async ({ method, url, data }) => {
+/* GENERIC API HELPER FUNCTION */
+const callAPI = async ({ method, url, data }) => {
   try {
     // Try API call using Axios
     const response = await Axios({
@@ -27,14 +27,10 @@ const callApi = async ({ method, url, data }) => {
   }
 }
 
-export async function handler(event, context) {
-  // Parse data from API call
-  const data = JSON.parse(event?.body)
-  // Log data from API call
-  console.log(data)
-
+/* PABBLY CODE */
+const callPabblyAPI = async ({ hostedpage }) => {
   // Call Pabbly Hostedpage Endpoint
-  const hostedpageResponse = await callApi({ method: "POST", url: 'https://payments.pabbly.com/api/v1/verifyhosted', data: { hostedpage: data.hostedpage }})
+  const hostedpageResponse = await callAPI({ method: "POST", url: 'https://payments.pabbly.com/api/v1/verifyhosted', data: { hostedpage }})
   const hostedpageData = hostedpageResponse?.content
   // Log result
   console.log({hostedpageData})
@@ -42,15 +38,15 @@ export async function handler(event, context) {
   if (hostedpageResponse?.success) {
     // Success
     // Call Customer Endpoint
-    const customerResponse = await callApi({ method: "GET", url: 'https://payments.pabbly.com/api/v1/customer/' + hostedpageResponse.content?.data?.customer_id, data: null})
+    const customerResponse = await callAPI({ method: "GET", url: 'https://payments.pabbly.com/api/v1/customer/' + hostedpageResponse.content?.data?.customer_id, data: null})
     const customerData = customerResponse?.content
     // Log result
     console.log({customerData})
     if (customerResponse?.success) {
       // Success; Return data to front-end
       return {
-        statusCode: 200,
-        body: JSON.stringify({
+        success: true,
+        content: {
           firstName: customerData?.data?.first_name,
           lastName: customerData?.data?.last_name,
           email: hostedpageData?.data?.email_id,
@@ -59,20 +55,45 @@ export async function handler(event, context) {
           amount: hostedpageData?.data?.amount * 10,
           currency: hostedpageData?.data?.currency_symbol,
           trial: hostedpageData?.data?.trial_days > 0
-        })
+        }
       }
     } else {
       // Error from Customer Endpoint
       return {
-        statusCode: 500,
-        body: JSON.stringify(customerData)
+        success: false,
+        content: customerData
       }
     }
   } else {
     // Error from Hostedpage Endpoint
     return {
+      success: false,
+      body: hostedpageData
+    }
+  }
+}
+
+/* REVOLUT CODE */
+
+/* MAIN FUNCTION */
+exports.handler = async (event) => { 
+  // Parse data from API call
+  const data = JSON.parse(event?.body)
+  // Log data from API call
+  console.log(data)
+
+  const pabblyData = await callPabblyAPI({ hostedpage: data.hostedpage })
+  if (pabblyData?.success) {
+    // Success; Return data to front-end
+    return {
+      statusCode: 200,
+      body: JSON.stringify(pabblyData?.content)
+    }
+  } else {
+    // Error from Customer Endpoint
+    return {
       statusCode: 500,
-      body: JSON.stringify(hostedpageData)
+      body: JSON.stringify(pabblyData?.content)
     }
   }
 }
