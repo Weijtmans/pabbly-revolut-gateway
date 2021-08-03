@@ -2,6 +2,10 @@ body {
   background-color: rgb(246, 249, 252);
 }
 
+h3 {
+  color:#161C2D;
+}
+
 .login-wrap {
   position: fixed;
   top: 50%;
@@ -17,4 +21,10 @@ body {
 
 .logo {
   width: 50px;
+}
+
+@media only screen and (max-width: 768px) {
+  .login-wrap {
+    width: 90%;
+  }
 }

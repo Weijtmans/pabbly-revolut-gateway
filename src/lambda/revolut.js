@@ -10,16 +10,16 @@ export async function handler(event, context) {
   }
 
   const body = {
-      amount: data?.amount,
-      currency: data?.currency,
-      description: data?.description,
+    amount: data?.amount,
+    currency: data?.currency,
+    description: data?.description,
   }
 
   try {
-    const response = await Axios.post( 
-        'https://sandbox-merchant.revolut.com/api/1.0/orders',
-        body,
-        config
+    const response = await Axios.post(
+      'https://sandbox-merchant.revolut.com/api/1.0/orders',
+      body,
+      config
     )
     const data = response?.data
     // Success
@@ -29,19 +29,19 @@ export async function handler(event, context) {
       body: JSON.stringify(data?.public_id)
     }
   } catch (error) {
-      // Error
-      if (error?.response) {
-          console.log(error?.response?.data)
-          console.log(error?.response?.status)
-          console.log(error?.response?.headers)
-      } else if (error.request) {
-          console.log(error?.request)
-      } else {
-          console.log('Error', error?.message)
-      }
-      return {
-        statusCode: 500,
-        body: JSON.stringify(error?.message)
-      }
+    // Error
+    if (error?.response) {
+      console.log(error?.response?.data)
+      console.log(error?.response?.status)
+      console.log(error?.response?.headers)
+    } else if (error.request) {
+      console.log(error?.request)
+    } else {
+      console.log('Error', error?.message)
+    }
+    return {
+      statusCode: 500,
+      body: JSON.stringify(error?.message)
+    }
   }
 }
