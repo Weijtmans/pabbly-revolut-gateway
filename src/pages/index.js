@@ -6,6 +6,7 @@ import withReactContent from 'sweetalert2-react-content'
 import "../styling/style.css"
 import logo from '../styling/images/icon.png'
 
+// Initiate Sweet Alert 2
 const MySwal = withReactContent(Swal)
 
 class Home extends Component {
@@ -115,6 +116,7 @@ class Home extends Component {
         },
         buttonsStyling: false
       })
+      setLoading(false)
       console.log(error)
     }
 
