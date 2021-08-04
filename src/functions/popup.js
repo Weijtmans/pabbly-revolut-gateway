@@ -1,42 +1,20 @@
 import RevolutCheckout from '@revolut/checkout'
-import Axios from 'axios'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 
 // Initiate Sweet Alert 2
 const MySwal = withReactContent(Swal)
 
-// Api call function
-const callAPI = async (hostedpage) => {
-    try {
-        // Try API call using Axios
-        const apiResponse = await Axios.post('/.netlify/functions/api', { hostedpage })
-        // Success
-        const apiData = apiResponse.data
-        return (apiData)
-
-    } catch (error) {
-        // Error
-        MySwal.fire({
-            title: "Error",
-            text: error,
-            icon: 'error',
-            customClass: {
-                confirmButton: 'btn btn-primary m-2',
-            },
-            buttonsStyling: false
-        })
-        console.log(error)
-    }
-}
-
 // Revolut checkout popup
-const popup = async (order) => {
-    const RC = await RevolutCheckout(order, 'sandbox')
+const popup = async (transaction) => {
+    const RC = await RevolutCheckout(transaction?.order, 'sandbox')
     RC.payWithPopup({
-        savePaymentMethodFor: "merchant",
-        name: "Elgar Weijtmans",
-        email: "elgar@weijtmans.org",
+        name: transaction?.customer?.firstName + " " + transaction?.customer?.lastName,
+        email: transaction?.customer?.email,
+        billingAddress: {
+            countryCode: transaction?.customer?.country,
+            postcode: transaction?.customer?.zip ? transaction?.customer?.zip : '00000'
+        },
         // Callback called when payment finished successfully
         onSuccess() {
             MySwal.fire({
@@ -65,23 +43,21 @@ const popup = async (order) => {
         // (optional) Callback in case user cancelled a transaction
         onCancel() {
             MySwal.fire({
-                title: "Payment cancelled",
+                title: "Transaction was cancelled",
                 icon: 'warning',
-                text: 'It seems like the transaction was canceled.',
+                text: 'Please click the button below to enter your card details.',
                 confirmButtonText: `Retry`,
-                showCancelButton: true,
                 customClass: {
                     confirmButton: 'btn btn-primary m-2',
-                    cancelButton: 'btn btn-secondary m-2'
                 },
                 buttonsStyling: false
             }).then((result) => {
                 if (result.isConfirmed) {
-                    popup(order)
+                    popup(transaction?.order)
                 }
             })
         },
     })
 }
 
-export { callAPI, popup }
+export { popup }
