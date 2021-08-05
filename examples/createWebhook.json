@@ -1,0 +1,7 @@
+{
+    "id": "54b040dd-883e-46ad-b6e9-95d869308020",
+    "url": "https://472551151e5e.ngrok.io/.netlify/functions/webhooks",
+    "events": [
+        "ORDER_COMPLETED"
+    ]
+}

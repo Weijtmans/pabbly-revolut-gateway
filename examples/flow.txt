@@ -1,0 +1,87 @@
+----------| Thu Aug 05 2021 13:05:46 GMT+0200 (Midden-Europese zomertijd) |----------
+{
+  status: 'success',
+  message: 'Customer data',
+  data: {
+    billing_address: {
+      state: 'Noord-Holland',
+      state_code: 'NH',
+      zip_code: '1079RN',
+      country: 'NL'
+    },
+    shipping_address: {},
+    createdAt: '2021-08-05T11:05:40.120Z',
+    updatedAt: '2021-08-05T11:05:40.120Z',
+    id: '610bc6045970a1191c76961f',
+    first_name: 'Elgar',
+    last_name: 'Weijtmans',
+    email_id: 'e.weijtmans@gmail.com'
+  }
+}
+{
+  status: 'success',
+  message: 'Valid hosted page data',
+  data: {
+    plan: {
+      plan_active: 'true',
+      payment_gateway: 'all',
+      createdAt: '2021-08-03T13:47:16.087Z',
+      updatedAt: '2021-08-03T13:47:16.087Z',
+      id: '610948e4d2ce1a7092b5606c',
+      product_id: '610948add2ce1a7092b56069',
+      user_id: '6109487c0d0ca4725d421ed8',
+      plan_name: 'Pro (monthly)',
+      plan_code: 'pro-(monthly)',
+      price: 1.5,
+      billing_period: 'm',
+      billing_period_num: '1',
+      billing_cycle: 'lifetime',
+      billing_cycle_num: null,
+      trial_period: 1,
+      setup_fee: 0,
+      plan_description: ''
+    },
+    setup_fee: 0,
+    payment_terms: '',
+    currency_symbol: '€',
+    payment_method: 'custom',
+    taxable: true,
+    gateway_type: 'custom',
+    gateway_id: '61094a75d2ce1a7092b5607f',
+    custom_fields: [],
+    createdAt: '2021-08-05T11:05:40.132Z',
+    updatedAt: '2021-08-05T11:05:40.132Z',
+    id: '610bc6045970a1191c769620',
+    customer_id: '610bc6045970a1191c76961f',
+    product_id: '610948add2ce1a7092b56069',
+    plan_id: '610948e4d2ce1a7092b5606c',
+    amount: 1.5,
+    email_id: 'e.weijtmans@gmail.com',
+    status: 'pending',
+    quantity: 1,
+    starts_at: '2021-08-05T11:05:40.404Z',
+    activation_date: '2021-08-06T11:05:40.404Z',
+    expiry_date: '2121-08-06T11:05:40.404Z',
+    trial_days: 1,
+    trial_expiry_date: '2021-08-06T11:05:40.404Z',
+    next_billing_date: '',
+    last_billing_date: '',
+    canceled_date: null
+  }
+}
+{
+  id: '99697bf5-a04e-4143-8e8b-9b3a3b9528da',
+  public_id: '560ae037-4d0b-4302-96ba-7c34b093ebee',
+  type: 'PAYMENT',
+  state: 'PENDING',
+  created_at: '2021-08-05T11:05:46.753585Z',
+  updated_at: '2021-08-05T11:05:46.753585Z',
+  description: 'This is a card verification. You will not be charged during your 14-day free trial.',
+  capture_mode: 'AUTOMATIC',
+  merchant_order_ext_ref: '610bc6045970a1191c769620',
+  customer_id: '3d183db4-7d86-45f3-936a-045514ccbf58',
+  email: 'e.weijtmans@gmail.com',
+  order_amount: { value: 0, currency: 'USD' },
+  order_outstanding_amount: { value: 0, currency: 'USD' }
+}
+--------------------------------------------------
