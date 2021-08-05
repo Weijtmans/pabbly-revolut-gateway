@@ -30,6 +30,7 @@ class Main extends Component {
     // Get hostedpage query string
     const params = queryString.parse(this.props.location.search)
     const hostedpage = params?.hostedpage
+    console.log(hostedpage)
     if (hostedpage) {
        // Get Pabbly & Revolut API data
       const transaction = await callAPI(hostedpage)

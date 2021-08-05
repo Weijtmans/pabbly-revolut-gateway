@@ -27,10 +27,10 @@ class Validation extends Component {
                             <div className="icon d-flex align-items-center justify-content-center">
                                 <img className="logo" src={logo} alt="Logo" />
                             </div><br />
-                            <h3 className="text-center mb-4">Almost there! 💪</h3>
-                            <p>We will create a $0 payment to verify your card.<br />Rest assured, you will not be charged during your 14-day free trial.</p>
+                            <h3 className="text-center mb-4">Please verify your card</h3>
+                            <p>We will create a $0 payment to verify your card.<br />You will not be charged during your 14-day free trial.</p>
                             <br />
-                            <button className="btn btn-primary rounded submit px-4 btn-lg" onClick={this.clickButton()}>Verify your card</button>
+                            <button className="btn btn-primary rounded submit px-4 btn-lg" onClick={this.clickButton()}>Verify credit card</button>
                         </div>
                     </div>
                 </div>

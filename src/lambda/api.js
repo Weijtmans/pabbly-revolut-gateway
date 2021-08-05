@@ -33,7 +33,7 @@ const callPabblyAPI = async ({ hostedpage }) => {
     password: process.env.PABBLY_PRIVATE_KEY
   }
   // Call Pabbly Hostedpage Endpoint
-  const hostedpageResponse = await callAPI({ method: "POST", url: 'https://payments.pabbly.com/api/v1/verifyhosted', data: { hostedpage }, auth: pabblyKeys, headers: null })
+  const hostedpageResponse = await callAPI({ method: "POST", url: 'https://payments.pabbly.com/api/v1/verifyhosted', data: { hostedpage }, auth: pabblyKeys, headers: null })  
   const hostedpageData = hostedpageResponse?.content
 
   if (hostedpageResponse?.success) {
@@ -81,16 +81,16 @@ const callRevolutAPI = async (data) => {
   } else {
     // If it's a direct payment
     order = {
-      amount: data?.hostedpageData?.data?.amount * 10,
+      amount: data?.hostedpageData?.data?.amount * 100,
       currency: "USD",
-      description: hostedpageData?.data?.plan?.plan_name,
+      description: data?.hostedpageData?.data?.plan?.plan_name,
       email: data?.hostedpageData?.data?.email_id,
       merchant_order_ext_ref: data?.hostedpageData?.data?.id
     }
   }
 
   // Call Revolut Orders API
-  const ordersResponce = await callAPI({ method: "POST", url: 'https://sandbox-merchant.revolut.com/api/1.0/orders', data: order, auth: null, headers: revolutKey })
+  const ordersResponce = await callAPI({ method: "POST", url: process.env.REVOLUT_URL + '/orders', data: order, auth: null, headers: revolutKey })
   const ordersData = ordersResponce?.content
   if (ordersResponce?.success) {
     // Success
@@ -115,12 +115,13 @@ exports.handler = async (event) => {
   const pabblyResponse = await callPabblyAPI({ hostedpage: postedData?.hostedpage })
   const pabblyData = pabblyResponse?.content
   if (pabblyResponse?.success) {
-
     // Success
     // Create Revolut Order
     const revolutResponse = await callRevolutAPI(pabblyData)
     const revolutData = revolutResponse?.content
+
     if (revolutResponse?.success) {
+      
       // Log return data
       console.log("----------| " + new Date() + " |----------")
       console.log(pabblyData?.customerData)
