@@ -5,6 +5,7 @@ import {
     Route,
 } from "react-router-dom"
 import Main from './views/main'
+import Success from './views/success'
 
 function App() {
     return (
@@ -13,6 +14,9 @@ function App() {
                 <Switch>
                     <Route exact path="/">
                         < Main />
+                    </Route>
+                    <Route exact path="/success">
+                        < Success />
                     </Route>
                 </Switch>
             </Router>

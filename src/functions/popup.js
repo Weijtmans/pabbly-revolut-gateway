@@ -17,46 +17,25 @@ const popup = async (transaction) => {
         },
         // Callback called when payment finished successfully
         onSuccess() {
-            MySwal.fire({
-                title: "Success",
-                text: 'We sent you an email to choose your password.',
-                icon: 'success',
-                customClass: {
-                    confirmButton: 'btn btn-primary m-2',
-                },
-                buttonsStyling: false
-            })
+            if(transaction?.customer?.trial === true){
+                window.location.href = '/success?t=1'
+            } else {
+                window.location.href = '/success'
+            }
+            //window.location.href = '/success'
         },
         // Callback in case some error happened
         onError(message) {
             MySwal.fire({
-                title: "Error",
-                text: message,
-                icon: 'error',
+                title: "There was an issue",
+                text: String(message).replace('RevolutCheckout: ','') + ".",
                 customClass: {
                     confirmButton: 'btn btn-primary m-2',
                 },
-                buttonsStyling: false
+                buttonsStyling: false,
+                confirmButtonText: 'Close',
             })
-            console.log(message)
-        },
-        // (optional) Callback in case user cancelled a transaction
-        onCancel() {
-            MySwal.fire({
-                title: "Transaction was cancelled",
-                icon: 'warning',
-                text: 'Please click the button below to enter your card details.',
-                confirmButtonText: `Retry`,
-                customClass: {
-                    confirmButton: 'btn btn-primary m-2',
-                },
-                buttonsStyling: false
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    popup(transaction?.order)
-                }
-            })
-        },
+        }
     })
 }
 
