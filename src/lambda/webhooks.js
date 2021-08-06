@@ -28,86 +28,186 @@ const callAPI = async ({ method, url, data, auth, headers }) => {
 /* MAIN FUNCTION */
 exports.handler = async (event) => {
 
-    // Log incoming data
-    console.log(event)
-    console.log(event?.body)
+    if (event?.body) {
 
-    // Set up API keys
-    const pabblyKeys = {
-        username: process.env.PABBLY_PUBLIC_KEY,
-        password: process.env.PABBLY_PRIVATE_KEY
-    }
-    const revolutKey = { Authorization: "Bearer " + process.env.REVOLUT_KEY }
+        // Set up API keys
+        const pabblyKeys = {
+            username: process.env.PABBLY_PUBLIC_KEY,
+            password: process.env.PABBLY_PRIVATE_KEY
+        }
+        const revolutKey = { Authorization: "Bearer " + process.env.REVOLUT_KEY }
 
-    /* Revolut API call */
-    if (
-        event?.headers["user-agent"]?.includes("Revolut") &&
-        event?.body?.event === "ORDER_COMPLETED") {
+        // Parse request body
+        const body = JSON.parse(event?.body)
 
-        // Check payment details via Revolut API
-        const orderResponse = await callAPI({ method: "GET", url: process.env.REVOLUT_URL + '/orders/' + event?.body?.order_id, data: null, auth: null, headers: revolutKey })  
-        const orderData = orderResponse?.content
+        /* Revolut API call */
+        if (
+            event?.headers["user-agent"]?.includes("Revolut") &&
+            body?.event === "ORDER_COMPLETED") {
 
-        //Get subscription data via Pabbly API (with "merchant_order_ext_ref" aka subscription_id)
-        const subscriptionResponce = await callAPI({ method: "GET", url: 'https://payments.pabbly.com/api/v1/subscription/' + orderData?.merchant_order_ext_ref, data: null, auth: pabblyKeys, headers: null })  
-        const subscriptionData = subscriptionResponce?.content
+            // Check payment details via Revolut API
 
-        // Get invoices via Pabbly API (with customer_id)
-        const invoicesResponce = await callAPI({ method: "GET", url: 'https://payments.pabbly.com/api/v1/invoices/' + subscriptionData?.data?.customer_id, data: null, auth: pabblyKeys, headers: null })  
-        const invoicesData = invoicesResponce?.content
+            /* ERROR WITH THE REVOLUT MERCHANT API FOR GETTING SINGLE ORDER BY ID */
+            const revolutOrderId = body?.order_id
 
-        // Check if this is a verification or an actual payment
-        // Check order amount = 0 and there are no invoices
-        if (invoicesData?.message === "No Invoice found" && orderData?.order_amount?.value === 0){
+            const orderResponse = await callAPI({ method: "GET", url: process.env.REVOLUT_URL + '/orders/' + revolutOrderId, data: null, auth: null, headers: revolutKey })
+            const orderData = orderResponse?.content
 
-            /* Verification payment */
+            //Get subscription data via Pabbly API (with "merchant_order_ext_ref" aka subscription_id)
+            const subscriptionResponce = await callAPI({ method: "GET", url: 'https://payments.pabbly.com/api/v1/subscription/' + orderData?.merchant_order_ext_ref, data: null, auth: pabblyKeys, headers: null })
+            const subscriptionData = subscriptionResponce?.content
 
-            await callAPI({ method: "POST", url: 'https://payments.pabbly.com/api/v1/subscription/activatetrial/' + orderData?.merchant_order_ext_ref, data: null, auth: pabblyKeys, headers: null })
+            // Get invoices via Pabbly API (with customer_id)
+            const invoicesResponce = await callAPI({ method: "GET", url: 'https://payments.pabbly.com/api/v1/invoices/' + subscriptionData?.data?.customer_id, data: null, auth: pabblyKeys, headers: null })
+            const invoicesData = invoicesResponce?.content
+
+            // Check if this is a verification or an actual payment
+            // Check order amount = 0 and there are no invoices
+            if (invoicesData?.message === "No Invoice found" && orderData?.order_amount?.value <= 1) {
+
+                /* Verification payment */
+
+                const activationResponse = await callAPI({ method: "POST", url: 'https://payments.pabbly.com/api/v1/subscription/activatetrial/' + orderData?.merchant_order_ext_ref, data: null, auth: pabblyKeys, headers: null })
+                const activationData = activationResponse?.content
+
+                console.log({
+                    message: activationData?.message,
+                    revolut_order_id: orderData?.id,
+                    pabbly_subscription_id: orderData?.merchant_order_ext_ref
+                })
+
+                // Trial acivated
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({ message: activationData?.message })
+                }
+            } else {
+
+                // Get latest invoice
+                const currentInvoice = invoicesData?.data[0]
+                const paymentData = {
+                    payment_mode: "Revolut Merchant",
+                    payment_note: "Revolut ID: " + orderData?.id,
+                    transaction: orderData?.id
+                }
+
+                // Register payment in Pabbly
+                const paymentRecordedResponse = await callAPI({ method: "POST", url: 'https://payments.pabbly.com/api/v1/invoice/recordpayment/' + currentInvoice?.id, data: paymentData, auth: pabblyKeys, headers: null })
+                const paymentRecordedData = paymentRecordedResponse?.content
+
+                // Log interaction
+                console.log({
+                    message: paymentRecordedData?.message,
+                    revolut_order_id: orderData?.id,
+                    pabbly_incoice_id: orderData?.merchant_order_ext_ref
+                })
+
+                // Payment recorded
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({ message: paymentRecordedData?.message })
+                }
+            }
+        } else if (
+            event?.headers["user-agent"]?.includes("Revolut") && (
+            body?.event === "ORDER_PAYMENT_DECLINED" || body?.event === "ORDER_PAYMENT_FAILED"
+            )) {
             
-            // Trial acivated
+            /* Payment declined or failed */
+
+            //Get subscription data via Pabbly API (with "merchant_order_ext_ref" aka subscription_id)
+            const subscriptionResponce = await callAPI({ method: "GET", url: 'https://payments.pabbly.com/api/v1/subscription/' + body?.merchant_order_ext_ref, data: null, auth: pabblyKeys, headers: null })
+            const subscriptionData = subscriptionResponce?.content
+
+            // Get invoices via Pabbly API (with customer_id)
+            const invoicesResponce = await callAPI({ method: "GET", url: 'https://payments.pabbly.com/api/v1/invoices/' + subscriptionData?.data?.customer_id, data: null, auth: pabblyKeys, headers: null })
+            const invoicesData = invoicesResponce?.content
+
+            // Get latest invoice
+            const currentInvoice = invoicesData?.data[0]
+
+            const errorData = {
+                error_message: body?.event,
+                transaction: "Revolut ID: " + body?.order_id,
+            }
+
+            // Register failed payment in Pabbly
+            const failedPaymentResponse = await callAPI({ method: "POST", url: 'https://payments.pabbly.com/api/v1/invoice/failedpayment/' + currentInvoice?.id, data: errorData, auth: pabblyKeys, headers: null })
+            const failedPaymentData = failedPaymentResponse?.content
+
+            // Log interaction
+            console.log({
+                message: body?.event,
+                revolut_order_id: body?.order_id,
+                pabbly_incoice_id: body?.merchant_order_ext_ref
+            })
+
+            // Failed payment recorded
             return {
                 statusCode: 200,
-                body: JSON.stringify({message: "Trial activated"})
+                body: JSON.stringify({ message: failedPaymentData?.message })
+            }
+
+        } else if (
+            event?.headers["user-agent"]?.includes("axios") &&
+            body?.event_type === "invoice_create") {
+
+            /* Pabbly API call */
+
+            // Pabbly API call to Initiate payment in Revolut after new invoice in Pabbly after payment confirmation in Pabbly
+
+            // Check if Data Subscription Gateway Type is custom (otherwise it would also try to be charge PayPal users)
+            if (body?.data?.subscription?.gateway_type === "custom") {
+
+                const order = {
+                    amount: body?.data?.credit_note?.charge_amount * 100,
+                    currency: "USD",
+                    description: body?.data?.subscription?.plan?.plan_name,
+                    email: body?.data?.subscription?.email_id,
+                    merchant_order_ext_ref: body?.data?.subscription_id
+                }
+
+                // Create order un Revolut
+                const ordersResponce = await callAPI({ method: "POST", url: process.env.REVOLUT_URL + '/orders', data: order, auth: null, headers: revolutKey })
+                const ordersData = ordersResponce?.content
+
+                // Check if order was created
+                if (ordersResponce?.success) {
+                    // Success
+
+                    // Confirm order via order id
+                    const confirmationResponce = await callAPI({ method: "POST", url: process.env.REVOLUT_URL + '/orders/' + ordersData?.id + "/confirm", data: null, auth: null, headers: revolutKey })
+                    const confirmationData = confirmationResponce?.content
+
+                    // Log interaction
+                    console.log({
+                        message: "Payment confirmed",
+                        content: confirmationData
+                    })
+
+                    // Payment confirmed and payment will be registered in Pabbly via webhook (above)
+                    return {
+                        statusCode: 200,
+                        body: JSON.stringify(confirmationData)
+                    }
+                } else {
+                    // Error from Revolut Orders Endpoint
+                    return {
+                        statusCode: 500,
+                        body: JSON.stringify({ error: ordersData })
+                    }
+                }
             }
         } else {
-
-            /* Actual payment */
-
-            // Todo: Get latest invoice with matching price
-            const currentInvoice = null
-            const paymentData = {
-                payment_mode: "Revolut Merchant",
-                payment_note: "Revolut Order ID: " + orderData?.order_id, 
-                transaction: orderData?.order_id
-            }
-
-            // Register payment in Pabbly
-            await callAPI({ method: "POST", url: 'https://payments.pabbly.com/api/v1/invoice/recordpayment/' + currentInvoice?.id, data: paymentData, auth: pabblyKeys, headers: null })
-            
-            // Payment recorded 
             return {
-                statusCode: 200,
-                body: JSON.stringify({message: "Payment recorded"})
+                statusCode: 500,
+                body: JSON.stringify({ error: "unauthorized" })
             }
         }
-    }
-
-    /* Pabbly API call */
-    if (
-        event?.headers["user-agent"]?.includes("axios") &&
-        event?.body?.event_type === "invoice_create") {
-        // Pabbly API call to Initiate payment in Revolut after new invoice in Pabbly after payment confirmation in Pabbly
-        
-        // Check if Data Subscription Gateway Type is custom (otherwise it would also try to be charge PayPal users)
-
-        // Get all customers via https://merchant.revolut.com/api/1.0/customers
-
-        // Find customer ID via email
-
-        // Create order {"amount": 0, "currency": "USD", "customer_id": "fa397c63-e548-417e-a929-8c37d976bf1e"} via https://sandbox-merchant.revolut.com/api/1.0/orders
-        
-        // Confirm order via https://merchant.revolut.com/api/1.0/orders/{order_id}/confirm
-
-        // Register payment in Pabbly
+    } else {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: "unauthorized" })
+        }
     }
 }
