@@ -3,6 +3,7 @@
   "version": "0.5.0",
   "private": true,
   "dependencies": {
+    "@babel/helper-builder-react-jsx": "^7.14.5",
     "@babel/helper-define-map": "^7.14.5",
     "@lottiefiles/lottie-player": "^1.1.1",
     "@revolut/checkout": "^1.0.13",
