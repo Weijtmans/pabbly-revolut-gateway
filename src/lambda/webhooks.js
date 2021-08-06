@@ -193,20 +193,20 @@ exports.handler = async (event) => {
                 } else {
                     // Error from Revolut Orders Endpoint
                     return {
-                        statusCode: 500,
+                        statusCode: 200,
                         body: JSON.stringify({ error: ordersData })
                     }
                 }
             }
         } else {
             return {
-                statusCode: 500,
+                statusCode: 200,
                 body: JSON.stringify({ error: "unauthorized" })
             }
         }
     } else {
         return {
-            statusCode: 500,
+            statusCode: 200,
             body: JSON.stringify({ error: "unauthorized" })
         }
     }
