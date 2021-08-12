@@ -11,7 +11,7 @@ class Main extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      loading: false,
+      loading: true,
       transaction: null
     }
   }
@@ -30,10 +30,10 @@ class Main extends Component {
     // Get hostedpage query string
     const params = queryString.parse(this.props.location.search)
     const hostedpage = params?.hostedpage
-    console.log(hostedpage)
     if (hostedpage) {
-       // Get Pabbly & Revolut API data
+      // Get Pabbly & Revolut API data
       const transaction = await callAPI(hostedpage)
+
       // Save result in props
       this.setTransaction(transaction)
       // Disable loading
@@ -51,18 +51,18 @@ class Main extends Component {
       if (this?.state?.loading) {
         return < Loader />
       } else {
-        if (this?.state?.transaction?.customer?.trial === false){
+        if (this?.state?.transaction?.customer?.trial === false) {
           return < Checkout transaction={this?.state?.transaction} />
         } else {
           return < Validation transaction={this?.state?.transaction} />
         }
-        
+
       }
     }
 
     return (
       <div>
-        { activeModule() }
+        {activeModule()}
       </div>
     )
   }

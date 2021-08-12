@@ -1,4 +1,14 @@
 import Axios from "axios"
+const loggly = require('loggly')
+
+const client = loggly.createClient({
+  token: process.env.LOGGLY_TOKEN,
+  subdomain: "https://tykr.loggly.com",
+  auth: {
+    username: "Weijtmans",
+    password: process.env.LOGGLY_PASSWORD
+  }
+})
 
 /* GENERIC API HELPER FUNCTION */
 const callAPI = async ({ method, url, data, auth, headers }) => {
@@ -33,7 +43,7 @@ const callPabblyAPI = async ({ hostedpage }) => {
     password: process.env.PABBLY_PRIVATE_KEY
   }
   // Call Pabbly Hostedpage Endpoint
-  const hostedpageResponse = await callAPI({ method: "POST", url: 'https://payments.pabbly.com/api/v1/verifyhosted', data: { hostedpage }, auth: pabblyKeys, headers: null })  
+  const hostedpageResponse = await callAPI({ method: "POST", url: 'https://payments.pabbly.com/api/v1/verifyhosted', data: { hostedpage }, auth: pabblyKeys, headers: null })
   const hostedpageData = hostedpageResponse?.content
 
   if (hostedpageResponse?.success) {
@@ -121,13 +131,10 @@ exports.handler = async (event) => {
     const revolutData = revolutResponse?.content
 
     if (revolutResponse?.success) {
-      
+
       // Log return data
-      console.log("----------| " + new Date() + " |----------")
-      console.log(pabblyData?.customerData)
-      console.log(pabblyData?.hostedpageData)
-      console.log(revolutData)
-      console.log("--------------------------------------------------")
+      client.log({CREATE_ORDER_PABBLY: pabblyData})
+      client.log({CREATE_ORDER_REVOLUT: revolutData})
       return {
         statusCode: 200,
         body: JSON.stringify({

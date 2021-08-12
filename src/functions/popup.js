@@ -7,7 +7,7 @@ const MySwal = withReactContent(Swal)
 
 // Revolut checkout popup
 const popup = async (transaction) => {
-    const RC = await RevolutCheckout(transaction?.order, 'sandbox')
+    const RC = await RevolutCheckout(transaction?.order, process.env.REACT_APP_REVOLUT_ENVIRONMENT)
     RC.payWithPopup({
         name: transaction?.customer?.firstName + " " + transaction?.customer?.lastName,
         email: transaction?.customer?.email,
@@ -28,12 +28,34 @@ const popup = async (transaction) => {
         onError(message) {
             MySwal.fire({
                 title: "There was an issue",
-                text: String(message).replace('RevolutCheckout: ','') + ".",
+                text: String(message).replace('RevolutCheckout: ',''),
+                confirmButtonText: "Retry",
+                allowOutsideClick: false,
                 customClass: {
                     confirmButton: 'btn btn-primary m-2',
                 },
-                buttonsStyling: false,
-                confirmButtonText: 'Close',
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    popup(transaction)
+                }
+            })
+        },
+        // Callback in case user cancelled a transaction
+        onCancel() {
+            MySwal.fire({
+                title: "Transaction canceled",
+                text: "Please click retry to restart the transaction",
+                allowOutsideClick: false,
+                confirmButtonText: "Retry",
+                customClass: {
+                    confirmButton: 'btn btn-primary m-2',
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    popup(transaction)
+                }
             })
         }
     })

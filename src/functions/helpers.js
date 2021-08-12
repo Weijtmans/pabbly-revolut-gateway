@@ -17,9 +17,8 @@ const callAPI = async (hostedpage) => {
     } catch (error) {
         // Error
         MySwal.fire({
-            title: "Error",
+            title: "There was an issue",
             text: error,
-            icon: 'error',
             customClass: {
                 confirmButton: 'btn btn-primary m-2',
             },
